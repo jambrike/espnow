@@ -81,7 +81,7 @@ function checkMovement(current) {
     movement += Math.sqrt(dx * dx + dy * dy);
   }
 
-  if (movement > 120 && !cooldown) {
+  if (movement > 260 && !cooldown) {
     triggerHit();
   }
 }
