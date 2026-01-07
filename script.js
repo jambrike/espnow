@@ -3,6 +3,10 @@ const canvas = document.getElementById("canvas");
 const ctx = canvas.getContext("2d");
 const statusText = document.getElementById("status");
 
+//extra status
+const hitIndicator = document.getElementById("hitIndicator");
+
+
 let detector;
 let redLight = false;
 let referencePose = null;
@@ -46,7 +50,7 @@ async function loop() {
   requestAnimationFrame(loop);
 }
 
-// --- DRAW SKELETON ---
+// --- DRAW SKELETON --
 function drawPose(keypoints) {
   ctx.fillStyle = "red";
 
@@ -79,27 +83,29 @@ function checkMovement(current) {
   }
 }
 
-// --- HIT ---
 function triggerHit() {
   cooldown = true;
+
   console.log("❌ MOVED DURING RED");
+
+  
+  hitIndicator.style.display = "block";
 
   fetch("/api/hit", { method: "POST" });
 
   setTimeout(() => {
+    hitIndicator.style.display = "none";
     cooldown = false;
     referencePose = null;
   }, 1500);
 }
 
-// --- RED / GREEN LOGIC ---
 function setRed(state) {
   redLight = state;
   referencePose = null;
   statusText.textContent = state ? "RED" : "GREEN";
 }
 
-// --- DEMO TIMER (AUTO TOGGLE) ---
 setInterval(() => {
   setRed(!redLight);
 }, 4000);
