@@ -20,9 +20,12 @@ navigator.mediaDevices.getUserMedia({ video: true })
 
 async function init() {
   detector = await poseDetection.createDetector(
-    poseDetection.SupportedModels.MoveNet,
-    { modelType: "Lightning" }
-  );
+  poseDetection.SupportedModels.MoveNet,
+  {
+    modelType: poseDetection.movenet.modelType.SINGLEPOSE_LIGHTNING
+  }
+);
+
   requestAnimationFrame(loop);
 }
 
