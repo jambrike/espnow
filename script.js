@@ -91,7 +91,8 @@ function triggerHit() {
   
   hitIndicator.style.display = "block";
 
-  fetch("/api/hit", { method: "POST" });
+  console.log("🔥 HIT");
+
 
   setTimeout(() => {
     hitIndicator.style.display = "none";
