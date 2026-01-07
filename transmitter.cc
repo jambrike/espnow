@@ -1,26 +1,63 @@
-#include <ESP8266WiFi.h>
-#include <espnow.h>
+#include <WiFi.h>
+#include <esp_now.h>
 
-uint8_t receiverMAC[] = {0x84,0xF3,0xEB,0x12,0x34,0x56}; // CHANGE THIS TO WHAT YOU GET IN SERIAL PORT!!!
+// 🔧 CHANGE THIS TO RECEIVER ESP32 MAC
+uint8_t receiverMAC[] = { 0x24, 0x6F, 0x28, 0xAA, 0xBB, 0xCC };
 
+typedef struct {
+  char command[8];
+} Message;
 
-uint8_t payload = 1;
+Message msg;
+
+// --- CALLBACK (OPTIONAL DEBUG) ---
+void onSend(const uint8_t *mac_addr, esp_now_send_status_t status) {
+  Serial.print("ESP-NOW send: ");
+  Serial.println(status == ESP_NOW_SEND_SUCCESS ? "OK" : "FAIL");
+}
 
 void setup() {
-  Serial.begin(9600);
-  WiFi.mode(WIFI_STA);
+  Serial.begin(115200);
 
-  if (esp_now_init() != 0) {
+  // ESP-NOW requires station mode
+  WiFi.mode(WIFI_STA);
+  WiFi.disconnect();
+
+  if (esp_now_init() != ESP_OK) {
     Serial.println("ESP-NOW init failed");
     return;
   }
 
-  esp_now_set_self_role(ESP_NOW_ROLE_CONTROLLER);
-  esp_now_add_peer(receiverMAC, ESP_NOW_ROLE_SLAVE, 1, NULL, 0);
+  esp_now_register_send_cb(onSend);
 
-  esp_now_send(receiverMAC, &payload, sizeof(payload));
+  esp_now_peer_info_t peerInfo = {};
+  memcpy(peerInfo.peer_addr, receiverMAC, 6);
+  peerInfo.channel = 0;
+  peerInfo.encrypt = false;
+
+  if (esp_now_add_peer(&peerInfo) != ESP_OK) {
+    Serial.println("Failed to add peer");
+    return;
+  }
+
+  Serial.println("ESP32 bridge ready. Waiting for HIT...");
 }
 
 void loop() {
-  // fires once. job done.
+  if (Serial.available()) {
+    String input = Serial.readStringUntil('\n');
+    input.trim();
+
+    if (input == "HIT") {
+      strcpy(msg.command, "On");
+
+      esp_err_t result = esp_now_send(
+        receiverMAC,
+        (uint8_t *)&msg,
+        sizeof(msg)
+      );
+
+      Serial.println("HIT sent via ESP-NOW");
+    }
+  }
 }
